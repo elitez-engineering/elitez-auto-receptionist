@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auto Receptionist · Elitez Group</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange:        #F15A22;
+      --navy:          #0B2447;
+      --bg:            #F5F6F8;
+      --surface:       #FFFFFF;
+      --text:          #0B2447;
+      --muted:         #64748B;
+      --border:        #E2E8F0;
+      --success:       #16A34A;
+      --success-light: #DCFCE7;
+      --warn:          #D97706;
+      --warn-light:    #FEF3C7;
+      --error:         #DC2626;
+      --error-light:   #FEE2E2;
+      --radius:        16px;
+      --radius-sm:     10px;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px 48px;
+    }
+
+    /* ── LOGO ── */
+    .logo-wrap {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo-wrap img { height: 30px; width: auto; display: block; margin: 0 auto; }
+    .logo-sub {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--orange); margin-top: 6px;
+    }
+
+    /* ── CLAIM CARD ── */
+    .card {
+      width: 100%; max-width: 400px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px 22px;
+      box-shadow: 0 2px 20px rgba(11,36,71,0.08);
+      border-top: 3px solid var(--orange);
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 4px 11px; border-radius: 20px; margin-bottom: 14px;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 1.8s ease-in-out infinite; }
+    .badge.waiting  { background: #FFF0EB; color: var(--orange); }
+    .badge.claimed  { background: var(--success-light); color: var(--success); }
+    .badge.taken    { background: var(--warn-light); color: var(--warn); }
+    .badge.claimed .badge-dot, .badge.taken .badge-dot { animation: none; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    .card-title { font-family: "Playfair Display", serif; font-size: 21px; color: var(--navy); margin-bottom: 6px; }
+    .card-sub   { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+
+    .ticket {
+      background: var(--navy); border-radius: var(--radius-sm);
+      padding: 15px 17px; margin-bottom: 18px;
+    }
+    .ticket-header {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--orange); margin-bottom: 11px;
+    }
+    .ticket-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; gap: 12px; }
+    .ticket-row:last-child { margin-bottom: 0; }
+    .ticket-label { color: rgba(255,255,255,0.4); }
+    .ticket-value { color: #fff; font-weight: 600; text-align: right; }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 11px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+    .field input {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-family: "Inter", sans-serif; font-size: 15px; color: var(--text);
+      background: var(--bg); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none;
+    }
+    .field input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(241,90,34,0.1); background: #fff; }
+    .field input::placeholder { color: #B0B8C8; }
+
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm);
+      font-family: "Inter", sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.18s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--orange); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #D94E1A; }
+
+    .icon-circle {
+      width: 62px; height: 62px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+    }
+    .icon-circle.green  { background: var(--success-light); border: 2px solid var(--success); }
+    .icon-circle.orange { background: var(--warn-light); border: 2px solid #D97706; }
+    .icon-circle svg { width: 26px; height: 26px; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-circle.green  svg { stroke: var(--success); }
+    .icon-circle.orange svg { stroke: var(--warn); }
+
+    .center { text-align: center; }
+    .claimed-pill {
+      display: inline-block; background: var(--success-light); color: var(--success);
+      font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 20px; margin: 10px 0 16px;
+    }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── ADMIN TOGGLE ── */
+    .admin-toggle-wrap {
+      width: 100%; max-width: 400px;
+      margin-top: 16px; text-align: center;
+    }
+
+    .admin-toggle-btn {
+      background: none; border: none;
+      font-size: 12px; color: var(--muted); cursor: pointer;
+      text-decoration: underline; text-underline-offset: 3px;
+      transition: color 0.18s;
+    }
+    .admin-toggle-btn:hover { color: var(--navy); }
+
+    /* ── ADMIN PANEL ── */
+    .admin-panel {
+      display: none;
+      width: 100%; max-width: 400px;
+      margin-top: 12px;
+    }
+
+    /* Admin Login */
+    .admin-login-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 2px 20px rgba(11,36,71,0.08);
+      border-top: 3px solid var(--navy);
+    }
+
+    .admin-login-title {
+      font-family: "Playfair Display", serif;
+      font-size: 17px; color: var(--navy); margin-bottom: 4px;
+    }
+    .admin-login-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+
+    .pw-field { position: relative; margin-bottom: 12px; }
+    .pw-field input {
+      width: 100%; padding: 12px 42px 12px 14px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-family: "Inter", sans-serif; font-size: 14px; color: var(--text);
+      background: var(--bg); outline: none; letter-spacing: 0.06em;
+      transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none;
+    }
+    .pw-field input:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(11,36,71,0.08); background: #fff; }
+    .pw-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 15px; }
+
+    .btn-admin-login {
+      width: 100%; padding: 12px; background: var(--navy); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-family: "Inter", sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: background 0.18s;
+    }
+    .btn-admin-login:hover { background: #1a3a6b; }
+
+    .admin-login-error { font-size: 11px; color: var(--error); margin-top: 8px; display: none; }
+
+    /* Admin Dashboard */
+    .admin-dash { display: none; }
+
+    .admin-dash-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .admin-dash-title { font-family: "Playfair Display", serif; font-size: 17px; color: var(--navy); }
+
+    .btn-sign-out {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 5px 12px; cursor: pointer; transition: all 0.18s;
+    }
+    .btn-sign-out:hover { color: var(--error); border-color: var(--error); }
+
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+    .date-input {
+      flex: 1; padding: 8px 10px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-family: "Inter", sans-serif; font-size: 12px; color: var(--text);
+      background: var(--surface); outline: none; min-width: 130px;
+    }
+    .date-input:focus { border-color: var(--navy); }
+
+    .btn-sm {
+      padding: 8px 12px; border: none; border-radius: var(--radius-sm);
+      font-family: "Inter", sans-serif; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    }
+    .btn-sm.navy   { background: var(--navy); color: #fff; }
+    .btn-sm.navy:hover { background: #1a3a6b; }
+    .btn-sm.orange { background: #FFF0EB; color: var(--orange); border: 1px solid #FCCDB8; }
+    .btn-sm.orange:hover { background: #FFE0D0; }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat-box { background: var(--surface); border-radius: var(--radius-sm); padding: 12px 14px; box-shadow: 0 1px 6px rgba(11,36,71,0.06); }
+    .stat-box-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .stat-box-val { font-family: "Playfair Display", serif; font-size: 24px; line-height: 1; }
+    .stat-box-val.orange { color: var(--orange); }
+    .stat-box-val.green  { color: var(--success); }
+    .stat-box-val.warn   { color: var(--warn); }
+    .stat-box-val.navy   { color: var(--navy); }
+
+    /* Section heads */
+    .sec-head {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted);
+      display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+    }
+    .live-dot { width: 7px; height: 7px; background: var(--error); border-radius: 50%; animation: blink 1.5s infinite; }
+
+    /* Case rows */
+    .case-row {
+      background: var(--surface); border-radius: var(--radius-sm);
+      padding: 13px 14px; margin-bottom: 8px;
+      box-shadow: 0 1px 6px rgba(11,36,71,0.05);
+      border-left: 3px solid transparent;
+    }
+    .case-row.open   { border-left-color: var(--error); }
+    .case-row.closed { border-left-color: var(--success); }
+
+    .case-row-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+    .case-visitor { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .case-time-badge { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+    .case-row-bot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+    .case-for { font-size: 12px; color: var(--muted); }
+
+    .spill { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+    .ppill {
+      font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+    }
+    .ppill.job   { background: #EFF6FF; color: #2563EB; }
+    .ppill.corp  { background: #F0FDF4; color: var(--success); }
+    .ppill.train { background: #FDF4FF; color: #7C3AED; }
+    .ppill.other { background: var(--bg); color: var(--muted); }
+
+    .spill-status {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    }
+    .spill-status.open   { background: var(--error-light); color: var(--error); }
+    .spill-status.closed { background: var(--success-light); color: var(--success); }
+
+    .attended-by { font-size: 11px; color: var(--muted); font-style: italic; }
+
+    /* Breakdown */
+    .breakdown-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-top: 14px; }
+    .bk-card {
+      background: var(--surface); border-radius: var(--radius-sm);
+      padding: 11px 12px; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 1px 6px rgba(11,36,71,0.05);
+    }
+    .bk-icon { font-size: 20px; }
+    .bk-label { font-size: 10px; color: var(--muted); font-weight: 500; }
+    .bk-count { font-size: 18px; font-weight: 700; color: var(--navy); line-height: 1; }
+
+    .empty { background: var(--surface); border-radius: var(--radius-sm); padding: 20px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    .footer { margin-top: 20px; font-size: 11px; color: var(--muted); text-align: center; }
+  </style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <div class="logo-wrap">
+    <img src="data:image/png;base64,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" alt="Elitez Group" />
+    <div class="logo-sub">Auto Receptionist</div>
+  </div>
+
+  <!-- ── CLAIM CARD ── -->
+  <div class="card">
+
+    <div id="state-loading" class="center" style="display:none;">
+      <div class="card-title" style="margin-bottom:6px;">Loading...</div>
+    </div>
+
+    <div id="state-no-case" class="center">
+      <div style="font-size:36px; margin-bottom:14px;">📋</div>
+      <div class="card-title">Staff Portal</div>
+      <div class="card-sub" style="margin-bottom:0;">This page is used to attend to visitors.<br>Tap the link in Telegram to assist a visitor, or use Admin Login below to view all cases.</div>
+    </div>
+
+    <div id="state-claim" style="display:none;">
+      <div class="badge waiting"><div class="badge-dot"></div> Waiting for assistance</div>
+      <div class="card-title">Visitor at Reception</div>
+      <div class="card-sub">A visitor needs help. Are you able to assist?</div>
+      <div class="ticket" id="ticket-claim"><div class="ticket-header">Visit Details</div></div>
+      <div class="field" style="margin-top:16px;">
+        <label>Your Name</label>
+        <input type="text" id="staff-name" placeholder="e.g. Sarah Lim" autocomplete="name" />
+      </div>
+      <button class="btn btn-primary" id="claim-btn" onclick="claimCase()">
+        I'll assist this visitor →
+      </button>
+    </div>
+
+    <div id="state-claimed" style="display:none;" class="center">
+      <div class="icon-circle green">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="badge claimed">✅ Case Closed</div>
+      <div class="card-title" style="margin-top:10px;">You're on it!</div>
+      <div class="card-sub">The team has been notified. Thank you for helping!</div>
+      <div class="ticket" id="ticket-claimed" style="text-align:left;"><div class="ticket-header">Visit Details</div></div>
+    </div>
+
+    <div id="state-taken" style="display:none;" class="center">
+      <div class="icon-circle orange">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div class="badge taken">Already Attended</div>
+      <div class="card-title" style="margin-top:10px;">Case is taken</div>
+      <div class="card-sub">A colleague is already assisting this visitor.</div>
+      <div class="claimed-pill" id="claimed-by-name">—</div>
+      <div class="ticket" id="ticket-taken" style="text-align:left;"><div class="ticket-header">Visit Details</div></div>
+    </div>
+
+  </div>
+
+  <!-- ── ADMIN TOGGLE ── -->
+  <div class="admin-toggle-wrap">
+    <button class="admin-toggle-btn" onclick="toggleAdmin()">🔒 Admin Login</button>
+  </div>
+
+  <!-- ── ADMIN PANEL ── -->
+  <div class="admin-panel" id="admin-panel">
+
+    <!-- Login -->
+    <div class="admin-login-card" id="admin-login-card">
+      <div class="admin-login-title">Admin Dashboard</div>
+      <div class="admin-login-sub">Enter password to view all cases.</div>
+      <div class="pw-field">
+        <input type="password" id="admin-pw" placeholder="Password" onkeydown="if(event.key==='Enter') adminLogin()" />
+        <button class="pw-toggle" onclick="toggleAdminPw()">👁</button>
+      </div>
+      <button class="btn-admin-login" onclick="adminLogin()">Sign In →</button>
+      <div class="admin-login-error" id="admin-login-error">Incorrect password.</div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="admin-dash" id="admin-dash">
+      <div class="admin-dash-header">
+        <div class="admin-dash-title">Case Summary</div>
+        <button class="btn-sign-out" onclick="adminLogout()">Sign Out</button>
+      </div>
+
+      <div class="filter-row">
+        <input type="date" class="date-input" id="date-filter" onchange="renderDash()" />
+        <button class="btn-sm navy" onclick="goToday()">Today</button>
+        <button class="btn-sm orange" onclick="renderDash()">↻ Refresh</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-box-label">Total Visits</div><div class="stat-box-val orange" id="s-total">0</div></div>
+        <div class="stat-box"><div class="stat-box-label">Open Cases</div><div class="stat-box-val warn" id="s-open">0</div></div>
+        <div class="stat-box"><div class="stat-box-label">Attended</div><div class="stat-box-val green" id="s-closed">0</div></div>
+        <div class="stat-box"><div class="stat-box-label">Attendance Rate</div><div class="stat-box-val navy" id="s-rate">—</div></div>
+      </div>
+
+      <!-- Open -->
+      <div class="sec-head"><div class="live-dot"></div> Open — Needs Attention</div>
+      <div id="d-open"></div>
+
+      <!-- All -->
+      <div class="sec-head" style="margin-top:16px;">All Cases</div>
+      <div id="d-all"></div>
+
+      <!-- Breakdown -->
+      <div class="sec-head" style="margin-top:16px;">By Purpose</div>
+      <div class="breakdown-row" id="d-breakdown"></div>
+
+    </div>
+  </div>
+
+  <div class="footer">Elitez Group of Companies · Auto Receptionist</div>
+
+<script>
+  // ── CONFIG ──
+  const TELEGRAM_BOT_TOKEN = '8705129749:AAGhiCaMpsvqEb-57qW5cg1ztHBMdKTAWQY';
+  const TELEGRAM_CHAT_ID   = '-5478455612';
+  const ADMIN_PASSWORD     = 'Elitez0308!';
+
+  // ── CLAIM LOGIC ──
+  const params  = new URLSearchParams(window.location.search);
+  const caseId  = params.get('case')    || '';
+  const visitor = params.get('visitor') || 'Unknown';
+  const forName = params.get('for')     || 'Unknown';
+  const purpose = params.get('purpose') || '—';
+  const time    = params.get('time')    || '—';
+  const STORE_KEY = 'elitez_claim_' + caseId;
+
+  function ticketRows() {
+    const emoji = {Job Seeker:'🙋','Corporate Client':'🏢',Training:'📚',Others:'💬'}[purpose] || '👤';
+    return '<div class="ticket-row"><span class="ticket-label">Visitor</span><span class="ticket-value">' + visitor + '</span></div>'
+         + '<div class="ticket-row"><span class="ticket-label">Here for</span><span class="ticket-value">' + forName + '</span></div>'
+         + '<div class="ticket-row"><span class="ticket-label">Purpose</span><span class="ticket-value">' + emoji + ' ' + purpose + '</span></div>'
+         + '<div class="ticket-row"><span class="ticket-label">Arrived</span><span class="ticket-value">' + time + '</span></div>';
+  }
+
+  function fillTicket(id) {
+    document.getElementById(id).innerHTML = '<div class="ticket-header">Visit Details</div>' + ticketRows();
+  }
+
+  function showState(id) {
+    ['state-loading','state-no-case','state-claim','state-claimed','state-taken'].forEach(s => {
+      document.getElementById(s).style.display = s === id ? 'block' : 'none';
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function notifyTeam(staffName) {
+    const emoji = {Job Seeker:'🙋','Corporate Client':'🏢',Training:'📚',Others:'💬'}[purpose] || '👤';
+    const msg = '✅ <b>Case Attended — Elitez Group</b>\n\n'
+      + emoji + ' <b>' + escHtml(visitor) + '</b> (here for ' + escHtml(forName) + ')\n'
+      + '👤 Attended by: <b>' + escHtml(staffName) + '</b>\n'
+      + '🆔 Ref: <code>' + escHtml(caseId) + '</code>\n\n'
+      + '<i>No further action needed.</i>';
+    try {
+      await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'HTML' })
+      });
+    } catch(e) {}
+  }
+
+  function claimCase() {
+    const staffName = document.getElementById('staff-name').value.trim();
+    const input = document.getElementById('staff-name');
+    if (!staffName) { input.style.borderColor = '#DC2626'; input.focus(); return; }
+    const existing = localStorage.getItem(STORE_KEY);
+    if (existing) {
+      document.getElementById('claimed-by-name').textContent = existing;
+      fillTicket('ticket-taken'); showState('state-taken'); return;
+    }
+    localStorage.setItem(STORE_KEY, staffName);
+    const btn = document.getElementById('claim-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Notifying team...';
+    notifyTeam(staffName).finally(() => { fillTicket('ticket-claimed'); showState('state-claimed'); });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (!caseId) {
+      // No case in URL — show no-case state
+      showState('state-no-case');
+      if (sessionStorage.getItem('ar_admin') === '1') showAdminDash();
+      return;
+    }
+    const existing = localStorage.getItem(STORE_KEY);
+    if (existing) {
+      document.getElementById('claimed-by-name').textContent = existing;
+      fillTicket('ticket-taken'); showState('state-taken');
+    } else {
+      fillTicket('ticket-claim'); showState('state-claim');
+    }
+    if (sessionStorage.getItem('ar_admin') === '1') showAdminDash();
+  });
+
+  // ── ADMIN TOGGLE ──
+  function toggleAdmin() {
+    const panel = document.getElementById('admin-panel');
+    panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'block' : 'none';
+  }
+
+  function toggleAdminPw() {
+    const inp = document.getElementById('admin-pw');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  function adminLogin() {
+    const val = document.getElementById('admin-pw').value;
+    if (val === ADMIN_PASSWORD) {
+      sessionStorage.setItem('ar_admin', '1');
+      showAdminDash();
+    } else {
+      document.getElementById('admin-login-error').style.display = 'block';
+      document.getElementById('admin-pw').value = '';
+    }
+  }
+
+  function adminLogout() {
+    sessionStorage.removeItem('ar_admin');
+    document.getElementById('admin-dash').style.display = 'none';
+    document.getElementById('admin-login-card').style.display = 'block';
+    document.getElementById('admin-pw').value = '';
+  }
+
+  function showAdminDash() {
+    document.getElementById('admin-login-card').style.display = 'none';
+    document.getElementById('admin-dash').style.display = 'block';
+    document.getElementById('admin-panel').style.display = 'block';
+    goToday();
+    renderDash();
+  }
+
+  // ── DASHBOARD ──
+  function getAllCases() {
+    const cases = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('elitez_case_')) {
+        try {
+          const c = JSON.parse(localStorage.getItem(key));
+          c.claimedBy = localStorage.getItem('elitez_claim_' + c.caseId) || null;
+          c.status = c.claimedBy ? 'closed' : 'open';
+          cases.push(c);
+        } catch(e) {}
+      }
+    }
+    return cases.sort((a,b) => new Date(b.ts) - new Date(a.ts));
+  }
+
+  function goToday() {
+    document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+    renderDash();
+  }
+
+  const PE = {'Job Seeker':'🙋','Corporate Client':'🏢','Training':'📚','Others':'💬'};
+  const PC = {'Job Seeker':'job','Corporate Client':'corp','Training':'train','Others':'other'};
+
+  function caseRowHTML(c) {
+    const pc = PC[c.purpose] || 'other';
+    const pe = PE[c.purpose] || '👤';
+    const attended = c.claimedBy
+      ? '<span class="attended-by">by ' + c.claimedBy + '</span>'
+      : '<span style="color:#DC2626;font-size:11px">Waiting...</span>';
+    return '<div class="case-row ' + c.status + '">'
+      + '<div class="case-row-top"><span class="case-visitor">' + c.visitor + '</span><span class="case-time-badge">' + c.time + '</span></div>'
+      + '<div class="case-row-bot"><span class="case-for">→ ' + c.forName + '</span>'
+      + '<div class="spill"><span class="ppill ' + pc + '">' + pe + ' ' + c.purpose + '</span>'
+      + '<span class="spill-status ' + c.status + '">' + (c.status==='open'?'🔴 Open':'✅ Done') + '</span>'
+      + attended + '</div></div></div>';
+  }
+
+  function renderDash() {
+    const dateVal = document.getElementById('date-filter').value;
+    const all = getAllCases();
+    const filtered = dateVal ? all.filter(c => c.ts && c.ts.startsWith(dateVal)) : all;
+    const open = filtered.filter(c => c.status === 'open');
+    const closed = filtered.filter(c => c.status === 'closed');
+
+    document.getElementById('s-total').textContent  = filtered.length;
+    document.getElementById('s-open').textContent   = open.length;
+    document.getElementById('s-closed').textContent = closed.length;
+    document.getElementById('s-rate').textContent   = filtered.length ? Math.round(closed.length/filtered.length*100) + '%' : '—';
+
+    document.getElementById('d-open').innerHTML = open.length === 0
+      ? '<div class="empty">✅ No open cases — all attended to.</div>'
+      : open.map(caseRowHTML).join('');
+
+    document.getElementById('d-all').innerHTML = filtered.length === 0
+      ? '<div class="empty">No cases found for this date.</div>'
+      : filtered.map(caseRowHTML).join('');
+
+    document.getElementById('d-breakdown').innerHTML =
+      ['Job Seeker','Corporate Client','Training','Others'].map(p => {
+        const cnt = filtered.filter(c => c.purpose === p).length;
+        return '<div class="bk-card"><div class="bk-icon">' + PE[p] + '</div><div><div class="bk-label">' + p + '</div><div class="bk-count">' + cnt + '</div></div></div>';
+      }).join('');
+  }
+
+  setInterval(() => { if (sessionStorage.getItem('ar_admin')==='1') renderDash(); }, 30000);
+</script>
+
+</body>
+</html>
